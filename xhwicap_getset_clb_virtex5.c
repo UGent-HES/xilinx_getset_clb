@@ -32,10 +32,7 @@ void XHwIcap_Custom_GetConfigurationCoordinates(XHwIcap *InstancePtr, long clb_r
    
     u32 major_frame_address = clb_col;
     u32 i;
-    for(i = 0; InstancePtr->SkipCols[i] != 0xFFFF; i++) {
-        if(major_frame_address <= InstancePtr->SkipCols[i])
-            break;
-    }
+    for (i = 0; major_frame_address > InstancePtr->SkipCols[i] ; i++);
     major_frame_address += i;
     
     u32 words_per_clb_row = InstancePtr->WordsPerFrame / num_clb_rows_per_clock_row;
