@@ -3,6 +3,7 @@
 
 #include "xhwicap_i.h"
 #include "xhwicap_custom_i.h"
+#include "xhwicap_getset_clb_7series.h"
 
 #if (XHI_FAMILY != XHI_DEV_FAMILY_7SERIES)
     #error You are using the wrong xhwicap_custom driver files. This file is specific to 7 series FPGAs only!!
