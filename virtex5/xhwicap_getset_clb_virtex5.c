@@ -17,8 +17,8 @@ void XHwIcap_Custom_GetConfigurationCoordinates(XHwIcap *InstancePtr, long clb_r
     u32 num_clb_rows_per_clock_row = num_clb_rows / num_clock_rows;
     u32 num_clb_cols = InstancePtr->Cols;
 
-    assert(clb_row >= 0 && clb_row < num_clb_rows);
-    assert(clb_col >= 0 && clb_col < num_clb_cols);
+    assert(clb_row >= 1 && clb_row <= num_clb_rows);
+    assert(clb_col >= 1 && clb_col <= num_clb_cols);
     
     u8 bottom_ntop;
     int clock_row = (clb_row - 1) / num_clb_rows_per_clock_row;
@@ -111,7 +111,7 @@ int XHwIcap_Custom_SetClbBits(XHwIcap *InstancePtr, long clb_row, long clb_col,
     if (Status != XST_SUCCESS)
         return XST_FAILURE;
 
-	return XST_SUCCESS;
+    return XST_SUCCESS;
 }
 
 
