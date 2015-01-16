@@ -1,7 +1,19 @@
+/******************************************************************************************************
+DISCLAIMER NOTICE
+*******************************************************************************************************
+We are not affiliated, associated, authorized, endorsed by, 
+or in any way officially connected with Xilinx, Inc. 
+or any of its subsidiaries or its affiliates.  
+In no event whatsoever shall Xilinx, Inc. 
+or any of its subsidiaries or its affiliates have any warranty or support commitment for this software 
+or liability for loss, injury or damage in connection with this software, 
+including but not limited to the use or display thereof.
+*******************************************************************************************************
+*/
 /**
 * Replacement for the XHwIcap_GetClbBits and XHwIcap_SetClbBits functions for the Zynq.
+* Created by Ghent University.
 **/
-
 #include <xhwicap.h>
 #include "xhwicap_custom.h"
 
