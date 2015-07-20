@@ -138,7 +138,7 @@ void XHwIcap_Custom_SetClbBitsInConfig(XHwIcap *InstancePtr, u32 *configuration,
 
 		if(bit_nr >= 32) {
 			bit_nr -= 32;
-		}else {
+		} else {
 			word_nr++;
 		}
 
@@ -155,6 +155,9 @@ void XHwIcap_Custom_SetClbBitsInConfig(XHwIcap *InstancePtr, u32 *configuration,
 
 /**
 * Sets bits contained in multiple LUTs specified by the coordinates and data in the lut_configs array.
+* For each LUT the slice_row, slice_col, Resource pointer, Value pointer and NumBits are stored cfr. the conventional XHwIcap_Custom_SetClbBits function.
+* All the LUTs reconfigured with one call to XHwIcap_Custom_SetMultiClbBits should be stored in the same set of frames!
+* This can be verified using the function XHwIcap_Custom_IsSameFrame.
 *
 * @return	XST_SUCCESS or XST_FAILURE.
 **/

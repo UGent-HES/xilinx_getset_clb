@@ -354,6 +354,3 @@ int XHwIcap_DeviceWriteFrames(XHwIcap *InstancePtr, long Top, long Block,
 
 	return XST_SUCCESS;
 };
-
-
-

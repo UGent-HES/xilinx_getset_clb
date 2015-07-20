@@ -18,7 +18,6 @@ including but not limited to the use or display thereof.
 #ifndef XHWICAP_MULTIFRAME_H_
 #define XHWICAP_MULTIFRAME_H_
 
-
 #include <xhwicap.h>
 #include "xhwicap_custom.h"
 
@@ -37,6 +36,5 @@ int XHwIcap_DeviceReadFrames(XHwIcap *InstancePtr, long Top, long Block,
 int XHwIcap_DeviceWriteFrames(XHwIcap *InstancePtr, long Top, long Block,
 				long HClkRow, long MajorFrame, long MinorFrame, u8 NumFrames,
 				u32 *FrameData);
-
 
 #endif
