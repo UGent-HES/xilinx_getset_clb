@@ -33,11 +33,30 @@ typedef struct {
 	long NumBits;
 } LUT_config_type;
 
+/**
+* Returns the size of the frames of one stack of clbs in 32-bit words.
+**/
+u32 XHwIcap_Custom_GetClbFramesSize(XHwIcap* InstancePtr);
 
 /**
 * Returns true if the configuration of two slices are stored in the same set of frames.
 **/
 u8 XHwIcap_Custom_IsSameFrame(XHwIcap *InstancePtr, long slice_row0, long slice_col0, long slice_row1, long slice_col1);
+
+/**
+* Reads the frames of a clb.
+*
+* @return	XST_SUCCESS or XST_FAILURE.
+**/
+int XHwIcap_Custom_ReadClbFrames(XHwIcap *InstancePtr, LUT_config_type  *lut_configs, u32 *config_buffer);
+
+/**
+* Sets bits contained in multiple LUTs specified by the coordinates and data in the lut_configs array.
+* The current configuration is provided in a buffer so that it does not have to be read again from the FPGA.
+*
+* @return	XST_SUCCESS or XST_FAILURE.
+**/
+int XHwIcap_Custom_SetMultiClbBitsWithFrames(XHwIcap *InstancePtr, LUT_config_type  *lut_configs, u32 num_lut_configs, u32 *config_buffer);
 
 /**
 * Sets bits contained in multiple LUTs specified by the coordinates and data in the lut_configs array.

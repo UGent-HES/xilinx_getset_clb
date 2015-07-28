@@ -24,6 +24,14 @@ including but not limited to the use or display thereof.
 #include "xhwicap.h"
 #include "xhwicap_custom.h"
 
+#define FRAME_NUM_CLB 4
+
+/**
+* Returns the size of the frames of one stack of clbs in 32-bit words.
+**/
+u32 XHwIcap_Custom_GetClbFramesSize(XHwIcap* InstancePtr) {
+	return FRAME_NUM_CLB * InstancePtr->WordsPerFrame;
+}
 
 /**
 * Returns the word offset of the configuration of a CLB within a frame.
@@ -138,7 +146,7 @@ void XHwIcap_Custom_SetClbBitsInConfig(XHwIcap *InstancePtr, u32 *configuration,
 
 		if(bit_nr >= 32) {
 			bit_nr -= 32;
-		} else {
+		}else {
 			word_nr++;
 		}
 
@@ -151,6 +159,105 @@ void XHwIcap_Custom_SetClbBitsInConfig(XHwIcap *InstancePtr, u32 *configuration,
 			word &= ~bit;
 		configuration[word_nr] = word;
 	}
+}
+
+
+/**
+* Reads the frames of a clb.
+*
+* @return	XST_SUCCESS or XST_FAILURE.
+**/
+int XHwIcap_Custom_ReadClbFrames(XHwIcap *InstancePtr, LUT_config_type  *lut_configs, u32 *config_buffer) {
+	u32 num_lut_configs = 1;
+	assert(num_lut_configs>0);
+	u32 i;
+	for(i = 0; i<num_lut_configs; i++) {
+		u8 bottom_ntop;
+		int Status;
+		int clock_row;
+		u32 major_frame_address;
+
+		long slice_row = lut_configs[i].slice_row;
+		long slice_col = lut_configs[i].slice_col;
+
+		XHwIcap_Custom_GetConfigurationCoordinates(InstancePtr, slice_row, slice_col,
+			&bottom_ntop, &clock_row, &major_frame_address);
+
+		u32 frame_num = FRAME_NUM_CLB;
+		u32 frame_number_offset;
+		if(lut_configs[i].Resource[0][1] < 32)
+			frame_number_offset = 26;
+		else
+			frame_number_offset = 32;
+
+		u32 buffer[InstancePtr->WordsPerFrame * (frame_num + 1) + 1];
+
+		Status = XHwIcap_DeviceReadFrames(InstancePtr, bottom_ntop, XHI_FAR_CLB_BLOCK,
+				clock_row, major_frame_address, frame_number_offset, frame_num, buffer);
+
+		if (Status != XST_SUCCESS)
+			return XST_FAILURE;
+
+		u32 *configuration = buffer + InstancePtr->WordsPerFrame + 1;
+
+		memcpy(config_buffer, configuration, InstancePtr->WordsPerFrame * frame_num * sizeof(u32));
+
+		config_buffer += InstancePtr->WordsPerFrame * frame_num;
+	}
+	return XST_SUCCESS;
+}
+
+/**
+* Sets bits contained in multiple LUTs specified by the coordinates and data in the lut_configs array.
+* The current configuration is provided in a buffer so that it does not have to be read again from the FPGA.
+*
+* @return	XST_SUCCESS or XST_FAILURE.
+**/
+int XHwIcap_Custom_SetMultiClbBitsWithFrames(XHwIcap *InstancePtr, LUT_config_type  *lut_configs, u32 num_lut_configs, u32 *config_buffer) {
+	u8 bottom_ntop;
+	int Status;
+	int clock_row;
+	u32 major_frame_address;
+
+	assert(num_lut_configs>0);
+
+	long slice_row = lut_configs[0].slice_row;
+	long slice_col = lut_configs[0].slice_col;
+
+	// Check if all the lutconfigs are indeed part of the same set of frames
+	u32 i;
+	for(i = 1; i<num_lut_configs; i++) {
+		if(!XHwIcap_Custom_IsSameFrame(InstancePtr, slice_row, slice_col, lut_configs[i].slice_row, lut_configs[i].slice_col))
+			return XST_FAILURE;
+	}
+
+	XHwIcap_Custom_GetConfigurationCoordinates(InstancePtr, slice_row, slice_col,
+		&bottom_ntop, &clock_row, &major_frame_address);
+
+	u32 frame_num = FRAME_NUM_CLB;
+	u32 frame_number_offset;
+	if(lut_configs[0].Resource[0][1] < 32)
+		frame_number_offset = 26;
+	else
+		frame_number_offset = 32;
+
+	u32 buffer[InstancePtr->WordsPerFrame * (frame_num + 1) + 1];
+	u32 *configuration = buffer + InstancePtr->WordsPerFrame + 1;
+	memcpy(configuration, config_buffer, InstancePtr->WordsPerFrame * frame_num * sizeof(u32));
+
+	for(i = 0; i< num_lut_configs; i++) {
+		u32 word_offset = XHwIcap_Custom_GetWordOffset(InstancePtr, lut_configs[i].slice_row);
+	    XHwIcap_Custom_SetClbBitsInConfig(InstancePtr, configuration, word_offset,
+	    		frame_num, frame_number_offset, lut_configs[i].Resource, lut_configs[i].Value, lut_configs[i].NumBits);
+	}
+
+	Status = XHwIcap_DeviceWriteFrames(InstancePtr, bottom_ntop, XHI_FAR_CLB_BLOCK,
+				clock_row, major_frame_address, frame_number_offset, frame_num, buffer);
+
+	if (Status != XST_SUCCESS)
+		return XST_FAILURE;
+
+	return XST_SUCCESS;
 }
 
 /**
@@ -182,7 +289,7 @@ int XHwIcap_Custom_SetMultiClbBits(XHwIcap *InstancePtr, LUT_config_type  *lut_c
 	XHwIcap_Custom_GetConfigurationCoordinates(InstancePtr, slice_row, slice_col,
 		&bottom_ntop, &clock_row, &major_frame_address);
 
-	u32 frame_num = 4;
+	u32 frame_num = FRAME_NUM_CLB;
 	u32 frame_number_offset;
 	if(lut_configs[0].Resource[0][1] < 32)
 		frame_number_offset = 26;
@@ -239,7 +346,7 @@ int XHwIcap_Custom_SetClbBits(XHwIcap *InstancePtr, long slice_row, long slice_c
     XHwIcap_Custom_GetConfigurationCoordinates(InstancePtr, slice_row, slice_col,
         &bottom_ntop, &clock_row, &major_frame_address);
     
-    u32 frame_num = 4;
+    u32 frame_num = FRAME_NUM_CLB;
     u32 frame_number_offset;
     if(Resource[0][1] < 32)
         frame_number_offset = 26;
@@ -294,7 +401,7 @@ int XHwIcap_Custom_GetClbBits(XHwIcap *InstancePtr, long slice_row, long slice_c
     XHwIcap_Custom_GetConfigurationCoordinates(InstancePtr, slice_row, slice_col,
         &bottom_ntop, &clock_row, &major_frame_address);
     
-    u32 frame_num = 4;
+    u32 frame_num = FRAME_NUM_CLB;
     u32 frame_number_offset;
     if(Resource[0][1] < 32)
         frame_number_offset = 26;
